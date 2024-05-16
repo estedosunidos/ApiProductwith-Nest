@@ -5,13 +5,22 @@ import { UpdateProductDto } from './dto/update-product.dto';
 import { Product } from './entities/product.entity';
 import { InjectModel } from '@nestjs/mongoose';
 import { ProductController } from './product.controller';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { ConfigService } from '@nestjs/config/dist/config.service';
+
 
 @Injectable()
 export class ProductService {
+  private defaultlimit:number
   constructor(
     @InjectModel(Product.name)
-    private  productModel: Model<Product>
-  ) {}
+    private  productModel: Model<Product>,
+    private readonly configService:ConfigService
+  ) {
+this.defaultlimit=configService.get<number>('defautlLimit')
+  
+    
+  }
 
     async create(createProductDto: CreateProductDto) {
        createProductDto.nameproduct=createProductDto.nameproduct.toLocaleLowerCase()
@@ -22,7 +31,6 @@ export class ProductService {
         if(err.coder === 11000){
           throw new  BadRequestException(`Product exists in db ${JSON.stringify(err.keyValue)}`)
         }
-        console.log(err)
         throw new InternalServerErrorException(`Can  not create Product - check server logs `)
   
       }
@@ -31,14 +39,13 @@ export class ProductService {
    
   
 
-  findAll() {
-    return this.productModel.find();
+  findAll(paginaDto:PaginationDto) {
+    const { limit=this.defaultlimit,offset=0}=paginaDto
+    return this.productModel.find().limit(limit).skip(offset).sort();
   }
 
   async findOne(term: string) {
     let product: Product | null = null;
-    console.log("ss", term);
-  
     if(!product){
       product = await this.productModel.findOne({ nameproduct: term.toLowerCase().trim() });
 
@@ -65,7 +72,6 @@ export class ProductService {
       if(err.coder === 11000){
         throw new  BadRequestException(`Product exists in db ${JSON.stringify(err.keyValue)}`)
       }
-      console.log(err)
       throw new InternalServerErrorException(`Can  not create Product - check server logs `)
 
     }

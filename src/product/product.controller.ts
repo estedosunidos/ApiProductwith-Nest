@@ -1,8 +1,9 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ValidationPipe, Query } from '@nestjs/common';
 import { ProductService } from './product.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { ParseMongoIdPipe } from 'src/common/pipes/parse-mongo-id/parse-mongo-id.pipe';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 @Controller('product')
 export class ProductController {
   constructor(
@@ -18,14 +19,13 @@ export class ProductController {
   
 
   @Get()
-   findAll() {
-     return this.productService.findAll()
+   findAll(@Query() paginatioDto:PaginationDto) {
+     return this.productService.findAll(paginatioDto)
    
   }
 
   @Get(':term')
    findOne(@Param('term') term: string) {
-    console.log(term);
     return this.productService.findOne(term)
    
   }
